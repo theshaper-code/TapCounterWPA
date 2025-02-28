@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tap Counter</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log("Service Worker registrado", reg))
+                .catch(err => console.log("Error al registrar Service Worker", err));
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        #counter {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #4CAF50;
+            transition: transform 0.1s ease-in-out;
+        }
+        #stats {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #666;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contador de Toques</h1>
+        <p id="counter">0</p>
+        <button id="tapButton">Tocar</button>
+        <button id="resetButton">Reiniciar</button>
+        <p id="stats">Máximo de toques: 0 | Última sesión: - </p>
+        <audio id="tapSound" src="tap.mp3"></audio>
+    </div>
+    <script>
+        let counter = localStorage.getItem("tapCounter") ? parseInt(localStorage.getItem("tapCounter")) : 0;
+        let maxCounter = localStorage.getItem("maxTapCounter") ? parseInt(localStorage.getItem("maxTapCounter")) : 0;
+        let lastSession = localStorage.getItem("lastSession") || "-";
+
+        const counterDisplay = document.getElementById("counter");
+        const tapButton = document.getElementById("tapButton");
+        const resetButton = document.getElementById("resetButton");
+        const tapSound = document.getElementById("tapSound");
+        const statsDisplay = document.getElementById("stats");
+
+        counterDisplay.textContent = counter;
+        statsDisplay.textContent = `Máximo de toques: ${maxCounter} | Última sesión: ${lastSession}`;
+
+        function vibrate() {
+            if (navigator.vibrate) {
+                navigator.vibrate(100);
+            }
+        }
+
+        function updateStats() {
+            if (counter > maxCounter) {
+                maxCounter = counter;
+                localStorage.setItem("maxTapCounter", maxCounter);
+            }
+            let now = new Date().toLocaleString();
+            localStorage.setItem("lastSession", now);
+            statsDisplay.textContent = `Máximo de toques: ${maxCounter} | Última sesión: ${now}`;
+        }
+
+        tapButton.addEventListener("click", () => {
+            counter++;
+            counterDisplay.textContent = counter;
+            localStorage.setItem("tapCounter", counter);
+            vibrate();
+            counterDisplay.style.transform = "scale(1.2)";
+            setTimeout(() => counterDisplay.style.transform = "scale(1)", 100);
+            tapSound.play();
+            updateStats();
+        });
+
+        resetButton.addEventListener("click", () => {
+            counter = 0;
+            counterDisplay.textContent = counter;
+            localStorage.setItem("tapCounter", counter);
+            vibrate();
+        });
+    </script>
+</body>
+</html>
